@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TurfBook Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4faf6;--card:#fff;--ink:#12352a;--muted:#5b7568;--line:#d5e9dc;--mint:#dff5e6;--mint2:#bfeacd;--green:#15803d;--red:#b42318;
+--head:"Sora","Trebuchet MS",system-ui,sans-serif;--body:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--body)}
+:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 18px}
+header{background:var(--mint);border-bottom:1px solid var(--mint2)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.logo{font:700 1.2rem var(--head)}.logo b{color:var(--green)}
+.top a,.top button{font:inherit;color:var(--ink);background:none;border:0;cursor:pointer;margin-left:14px;text-decoration:underline}
+nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:12px}
+nav button{flex:0 0 auto;border:2px solid transparent;background:transparent;color:var(--ink);padding:7px 14px;border-radius:999px;font:500 .95rem var(--body);cursor:pointer}
+nav button[aria-pressed=true]{background:var(--green);color:#fff}
+main{padding:22px 18px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px}
+h2{font:700 1.2rem var(--head);margin:0}
+h3{font:700 1rem var(--head);margin:0 0 10px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.stat b{display:block;font:700 2rem var(--head);color:var(--green)}.stat span{color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}@media(max-width:760px){.two{grid-template-columns:1fr}}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+th{color:var(--muted);font-size:.82rem}
+.act{text-align:right}.act button{margin-left:6px}
+button.p,.act button,#cancel{font:600 .9rem var(--body);border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+button.p{background:var(--green);border-color:var(--green);color:#fff}
+.act button.d{color:var(--red);border-color:#f0c7c2}
+.low{color:var(--red)}.empty{color:var(--muted)}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+input,select{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%}
+.filters input{width:auto;min-width:160px}
+label{display:grid;gap:5px;font-weight:500;margin-top:12px}
+.err{color:var(--red);font-weight:500;min-height:1.2em;margin:10px 0 0}
+dialog{border:0;border-radius:14px;padding:22px;width:min(440px,92vw);color:var(--ink)}
+dialog::backdrop{background:rgba(18,53,42,.45)}
+.acts{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header><div class="wrap">
+    <div class="top"><span class="logo">Turf<b>Book</b> Admin</span><span><a href="/">View site</a></span></div>
+    <nav id="nav" aria-label="Admin sections"></nav>
+  </div></header>
+  <main class="wrap" id="view"></main>
+</div>
+
+<dialog id="dlg"><form id="frm">
+  <h2 id="dt"></h2><div id="fields"></div><p class="err" id="derr" role="alert"></p>
+  <div class="acts"><button type="button" id="cancel">Cancel</button><button class="p">Save</button></div>
+</form></dialog>
+
+<script src="mock-api.js"></script>
+<script>
+var E={
+ facilities:{title:"Facilities",one:"facility",id:"fid",f:[["fname","Name","text"],["fsport","Sport","text"]]},
+ timeslots:{title:"Time slots",one:"time slot",id:"tid",f:[["start","Start hour (0-23)","number"],["end","End hour (0-23)","number"]]},
+ coaches:{title:"Coaches",one:"coach",id:"cid",f:[["name","Name","text"],["phone","Phone","text"]]},
+ equipment:{title:"Equipment",one:"equipment item",id:"eid",f:[["item","Item","text"],["quantity","Quantity in stock","number"],["fid","Facility","select:facilities"]]},
+ users:{title:"Users",one:"user",id:"uid",f:[["name","Name","text"],["phone","Phone (10 digits)","text"]]}
+};
+var B={one:"booking",id:"bid",f:[["fid","Facility","select:facilities"],["tid","Time slot","select:timeslots"],["cid","Coach","select:coaches"],["booking_date","Date","date"]]};
+var TABS=[["dash","Dashboard"],["bookings","Bookings"],["facilities","Facilities"],["timeslots","Time slots"],["coaches","Coaches"],["equipment","Equipment"],["users","Users"]];
+var D={},tab="dash",F={q:"",d:""},cur=null;
+var $=i=>document.getElementById(i);
+var esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+var lbl=h=>((h%12)||12)+(h%24<12?" am":" pm");
+var slot=t=>lbl(t.start)+" – "+lbl(t.end);
+var ymd=d=>{var m=d.getMonth()+1,x=d.getDate();return d.getFullYear()+"-"+(m<10?"0":"")+m+"-"+(x<10?"0":"")+x};
+
+function api(path,method,body){
+  return fetch("/api/"+path,{method:method||"GET",headers:{"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined})
+  .then(r=>r.json().then(d=>{if(!r.ok)throw new Error(d.error||"Request failed");return d}));
+}
+function opts(src){
+  if(src==="facilities")return D.facilities.map(x=>[x.fid,x.fname+" ("+x.fsport+")"]);
+  if(src==="timeslots")return D.timeslots.map(x=>[x.tid,slot(x)]);
+  return D.coaches.map(x=>[x.cid,x.name]);
+}
+function show(f,v){
+  if(f[2].startsWith("select:")){var o=opts(f[2].slice(7)).filter(p=>p[0]==v)[0];return o?esc(o[1]):"None"}
+  if(f[0]==="start"||f[0]==="end")return lbl(v);
+  if(f[0]==="quantity"&&v<=3)return '<b class="low">'+v+' (low)</b>';
+  return esc(v);
+}
+function loadAll(){
+  return Promise.all(["facilities","timeslots","coaches","equipment","users","bookings"].map(k=>api("admin/"+k).then(r=>D[k]=r))).then(view);
+}
+function view(){
+  $("nav").innerHTML=TABS.map(t=>'<button data-tab="'+t[0]+'" aria-pressed="'+(tab===t[0])+'">'+t[1]+'</button>').join("");
+  var v=$("view");
+  if(tab==="dash")v.innerHTML=dash();
+  else if(tab==="bookings"){
+    v.innerHTML='<div class="card"><div class="head"><h2>Bookings</h2><button class="p" data-bnew="1">+ New booking</button></div>'+
+    '<div class="filters"><input id="fq" type="search" placeholder="Search name, phone, facility…" value="'+esc(F.q)+'"><input id="fd" type="date" value="'+F.d+'" aria-label="Filter by date"><button class="act" id="fx" type="button" style="border:1px solid var(--line);border-radius:8px;background:var(--card);padding:8px 14px;cursor:pointer;font:inherit">Clear</button></div>'+
+    '<div class="tw" id="btab"></div></div>';
+    $("fq").oninput=e=>{F.q=e.target.value;drawBook()};$("fd").onchange=e=>{F.d=e.target.value;drawBook()};
+    $("fx").onclick=()=>{F={q:"",d:""};view()};drawBook();
+  } else v.innerHTML=table(tab);
+}
+function dash(){
+  var today=ymd(new Date()),bt=D.bookings.filter(b=>b.booking_date===today),low=D.equipment.filter(e=>e.quantity<=3);
+  var up=D.bookings.filter(b=>b.booking_date>=today).sort((a,b)=>a.booking_date.localeCompare(b.booking_date)||a.start-b.start).slice(0,6);
+  var st=[[bt.length,"Bookings today"],[D.bookings.length,"All bookings"],[D.facilities.length,"Facilities"],[D.coaches.length,"Coaches"],[D.users.length,"Users"]];
+  return '<div class="stats">'+st.map(s=>'<div class="stat"><b>'+s[0]+'</b><span>'+s[1]+'</span></div>').join("")+'</div><div class="two">'+
+  '<div class="card"><h3>Upcoming bookings</h3>'+(up.length?'<table><tbody>'+up.map(b=>'<tr><td>'+b.booking_date+'</td><td>'+slot(b)+'</td><td>'+esc(b.facility)+'</td><td>'+esc(b.username)+'</td></tr>').join("")+'</tbody></table>':'<p class="empty">Nothing upcoming.</p>')+'</div>'+
+  '<div class="card"><h3>Low stock (3 or fewer)</h3>'+(low.length?'<table><tbody>'+low.map(e=>'<tr><td>'+esc(e.item)+'</td><td class="low"><b>'+e.quantity+'</b> left</td></tr>').join("")+'</tbody></table>':'<p class="empty">All equipment is well stocked.</p>')+'</div></div>';
+}
+function table(key){
+  var e=E[key],rows=D[key];
+  return '<div class="card"><div class="head"><h2>'+e.title+'</h2><button class="p" data-add="'+key+'">+ Add</button></div><div class="tw"><table><thead><tr><th>ID</th>'+
+  e.f.map(f=>'<th>'+f[1]+'</th>').join("")+'<th></th></tr></thead><tbody>'+
+  (rows.map(r=>'<tr><td>'+r[e.id]+'</td>'+e.f.map(f=>'<td>'+show(f,r[f[0]])+'</td>').join("")+
+   '<td class="act"><button data-edit="'+key+'" data-id="'+r[e.id]+'">Edit</button><button class="d" data-del="'+key+'" data-id="'+r[e.id]+'">Delete</button></td></tr>').join("")||'<tr><td colspan="9" class="empty">Nothing here yet. Use Add.</td></tr>')+
+  '</tbody></table></div></div>';
+}
+function drawBook(){
+  var q=F.q.toLowerCase();
+  var rows=D.bookings.filter(b=>(!F.d||b.booking_date===F.d)&&(!q||(b.username+b.phone+b.facility+(b.coach||"")+"B"+b.bid).toLowerCase().includes(q)));
+  $("btab").innerHTML='<table><thead><tr><th>ID</th><th>Customer</th><th>Facility</th><th>Date</th><th>Time</th><th>Coach</th><th>Equipment</th><th></th></tr></thead><tbody>'+
+  (rows.map(b=>'<tr><td>B'+b.bid+'</td><td>'+esc(b.username)+'<br><small class="empty">'+esc(b.phone)+'</small></td><td>'+esc(b.facility)+'</td><td>'+b.booking_date+'</td><td>'+slot(b)+'</td><td>'+(b.coach?esc(b.coach):"None")+'</td><td>'+esc(b.equipment||"None")+
+   '</td><td class="act"><button data-bedit="'+b.bid+'">Edit</button><button class="d" data-bdel="'+b.bid+'">Cancel</button></td></tr>').join("")||'<tr><td colspan="8" class="empty">No bookings match.</td></tr>')+'</tbody></table>';
+}
+function openForm(key,id){
+  var e=key==="bookings"?B:E[key],r=id!=null?D[key].filter(x=>x[e.id]==id)[0]:null,f=e.f.slice();
+  if(key==="bookings"&&!r)f=[["name","Customer name","text"],["phone","Phone (10 digits)","text"]].concat(f);
+  cur={key:key,id:id};
+  $("dt").textContent=(r?"Edit ":"Add ")+e.one;$("derr").textContent="";
+  $("fields").innerHTML=f.map(x=>{
+    var v=r&&r[x[0]]!=null?r[x[0]]:"",h;
+    if(x[2].startsWith("select:")){
+      h='<select name="'+x[0]+'">'+(x[0]==="cid"?'<option value=""'+(v===""?" selected":"")+'>None</option>':"")+
+        opts(x[2].slice(7)).map(p=>'<option value="'+p[0]+'"'+(p[0]==v?" selected":"")+'>'+esc(p[1])+'</option>').join("")+'</select>';
+    } else h='<input name="'+x[0]+'" type="'+x[2]+'" value="'+esc(v)+'"'+(x[2]==="number"?' min="0"':"")+(x[0]==="phone"&&key!=="coaches"?' maxlength="10" inputmode="numeric"':"")+' required>';
+    return '<label>'+x[1]+h+'</label>';
+  }).join("");
+  $("dlg").showModal();
+}
+$("frm").onsubmit=ev=>{
+  ev.preventDefault();
+  var o=Object.fromEntries(new FormData($("frm"))),k=cur.key,p;
+  $("derr").textContent="";
+  if(k==="bookings"){
+    var c=o.cid?+o.cid:null;
+    p=cur.id==null?api("bookings","POST",{name:o.name,phone:o.phone,fid:+o.fid,tid:+o.tid,date:o.booking_date,cid:c})
+                  :api("admin/bookings/"+cur.id,"PUT",{fid:+o.fid,tid:+o.tid,cid:c,booking_date:o.booking_date});
+  } else p=api("admin/"+k+(cur.id!=null?"/"+cur.id:""),cur.id!=null?"PUT":"POST",o);
+  p.then(()=>{$("dlg").close();return loadAll()}).catch(x=>{$("derr").textContent=x.message});
+};
+$("cancel").onclick=()=>$("dlg").close();
+
+document.addEventListener("click",ev=>{
+  var b=ev.target.closest("button");if(!b)return;var d=b.dataset;
+  if(d.tab){tab=d.tab;view()}
+  else if(d.add)openForm(d.add);
+  else if(d.edit)openForm(d.edit,d.id);
+  else if(d.bnew)openForm("bookings");
+  else if(d.bedit)openForm("bookings",d.bedit);
+  else if(d.del){if(confirm("Delete this "+E[d.del].one+"?"))api("admin/"+d.del+"/"+d.id,"DELETE").then(loadAll).catch(x=>alert(x.message))}
+  else if(d.bdel){if(confirm("Cancel booking B"+d.bdel+"? Any equipment it used goes back into stock."))api("admin/bookings/"+d.bdel,"DELETE").then(loadAll).catch(x=>alert(x.message))}
+});
+
+loadAll().catch(()=>{});
+</script>
+</body>
+</html>

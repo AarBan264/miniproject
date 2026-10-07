@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TurfBook</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4faf6;--card:#fff;--ink:#12352a;--muted:#5b7568;--line:#d5e9dc;--mint:#dff5e6;--mint2:#bfeacd;--green:#15803d;--white:#fff;--red:#b42318;
+--head:"Sora","Trebuchet MS",system-ui,sans-serif;--body:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--body)}
+:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+header{background:var(--mint);border-bottom:1px solid var(--mint2)}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:16px 0}
+.logo{font:700 1.3rem var(--head)}.logo b{color:var(--green)}
+.hero{padding:10px 0 34px}
+.hero h1{font:700 clamp(2rem,6vw,3.4rem)/1.08 var(--head);margin:0 0 8px;max-width:16ch}
+.hero p{margin:0;color:var(--muted);max-width:48ch}
+.grid{display:grid;grid-template-columns:1fr 340px;gap:22px;align-items:start;padding:26px 20px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.steps{display:grid;gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px}
+h2{font:700 1.15rem var(--head);margin:0 0 14px}
+h3{font-size:.9rem;margin:16px 0 8px;color:var(--muted);font-weight:700}
+.hint{font:400 .85rem var(--body);color:var(--muted);margin-left:6px}
+.facs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.fac{border:2px solid var(--line);background:var(--card);border-radius:12px;padding:14px;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.fac .ic{font-size:1.7rem;display:block}
+.fac b{display:block}.fac small{color:var(--muted)}
+.fac[aria-pressed=true],.chip[aria-pressed=true],.day[aria-pressed=true],.slot[aria-pressed=true]{border-color:var(--green);background:var(--green);color:var(--white)}
+.fac[aria-pressed=true] small{color:var(--mint)}
+.days{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.day{flex:0 0 auto;min-width:66px;border:2px solid var(--line);background:var(--card);color:inherit;border-radius:12px;padding:8px 10px;text-align:center;cursor:pointer;font:inherit}
+.day b{display:block;font-size:1.2rem}.day small{font-size:.8rem}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.slot,.chip{border:2px solid var(--line);background:var(--card);color:inherit;border-radius:10px;padding:10px;cursor:pointer;font:500 .95rem var(--body)}
+.slot:disabled{background:#eef3ef;color:#8ea096;border-color:#eef3ef;text-decoration:line-through;cursor:not-allowed}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border-radius:999px;padding:8px 16px}
+.eq{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.eq:last-child{border:0}
+.step{display:flex;align-items:center;gap:8px}
+.step button{width:32px;height:32px;border-radius:50%;border:2px solid var(--line);background:var(--card);color:inherit;font:700 1.1rem var(--body);cursor:pointer}
+.step button:disabled{opacity:.35;cursor:not-allowed}
+.step span{min-width:18px;text-align:center;font-weight:700}
+.sum{position:sticky;top:16px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:.95rem}
+.row span:first-child{color:var(--muted)}.row span:last-child{text-align:right;font-weight:500}
+label{display:grid;gap:5px;font-weight:500;font-size:.9rem;margin-top:12px}
+input{font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.btn{width:100%;margin-top:16px;background:var(--green);color:var(--white);border:0;border-radius:10px;padding:14px;font:700 1rem var(--body);cursor:pointer}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.alt{background:var(--mint);color:var(--ink)}
+.err{color:var(--red);font-weight:500;min-height:1.3em;margin:10px 0 0;font-size:.92rem}
+.done{display:none;text-align:center;padding:10px 0}
+.done .ok{font:700 2.2rem var(--head);color:var(--green)}
+.empty{color:var(--muted)}
+.list{max-width:1080px;margin:0 auto;padding:0 20px 60px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);font-size:.85rem}
+.card h2 .ck{display:none;margin-left:8px;color:var(--green);font-size:1rem}
+.card.done-step h2 .ck{display:inline}
+.bar2{display:none}
+.sk{color:var(--muted)}
+.retry{background:var(--mint);border:0;border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer;margin-left:8px;color:var(--ink)}
+@media(max-width:860px){
+.bar2{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--card);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));gap:12px;align-items:center;justify-content:space-between}
+.bar2 span{font-size:.9rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar2 button{flex:0 0 auto;background:var(--green);color:var(--white);border:0;border-radius:10px;padding:11px 18px;font:700 .95rem var(--body);cursor:pointer}
+.sum{position:static}.list{padding-bottom:90px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="bar"><span class="logo">Turf<b>Book</b></span></div>
+  <div class="hero"><h1>Book your game in a minute.</h1><p>Choose a facility, a day and a time. Add a coach or equipment if you need them.</p></div>
+</div></header>
+
+<main class="wrap grid">
+  <div class="steps">
+    <section class="card" id="s1"><h2>1. Facility<span class="ck" aria-hidden="true">✓</span></h2><div class="facs" id="fac"><span class="sk">Loading facilities…</span></div></section>
+    <section class="card" id="s2"><h2>2. Day<span class="ck" aria-hidden="true">✓</span></h2><div class="days" id="days"></div></section>
+    <section class="card" id="s3"><h2>3. Time<span class="ck" aria-hidden="true">✓</span></h2><div id="slots"></div></section>
+    <section class="card"><h2>4. Extras<span class="hint">optional</span></h2>
+      <h3>Coach</h3><div class="chips" id="coach"></div>
+      <h3>Equipment at this facility</h3><div id="equip"></div>
+    </section>
+  </div>
+
+  <aside class="card sum">
+    <div id="form">
+      <h2>Your booking</h2>
+      <div id="sum"></div>
+      <label>Name<input id="uname" autocomplete="name"></label>
+      <label>Phone number<input id="uphone" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="10 digits"></label>
+      <p class="err" id="err" role="alert"></p>
+      <button class="btn" id="go" type="button">Confirm booking</button>
+    </div>
+    <div class="done" id="done" role="status">
+      <div class="ok" id="bid"></div>
+      <p id="dsum">Booking confirmed. Show this ID at the turf.</p>
+      <button class="btn alt" id="again" type="button">Book another slot</button>
+    </div>
+  </aside>
+</main>
+
+<section class="list"><div class="card"><h2>Recent bookings</h2><div class="tw" id="list"></div></div></section>
+
+<div class="bar2"><span id="barsum">Choose a facility to continue</span><button type="button" id="barbtn">Next</button></div>
+<script src="mock-api.js"></script>
+<script>
+var FAC=[],SLOTS=[],COACH=[],EQ=[],BOOKS=[],taken=[];
+var sel={Fid:null,date:null,tid:null,cid:null,qty:{}};
+var $=function(i){return document.getElementById(i)};
+var ICON={football:"⚽",cricket:"🏏",badminton:"🏸",tennis:"🎾",basketball:"🏀"};
+var DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+function lbl(h){h=h%24;return (h%12||12)+(h<12?" am":" pm")}
+function ymd(d){var m=d.getMonth()+1,x=d.getDate();return d.getFullYear()+"-"+(m<10?"0":"")+m+"-"+(x<10?"0":"")+x}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function api(p,o){return fetch("/api/"+p,o).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||"Request failed");return d})})}
+function find(a,k,v){return a.filter(function(x){return x[k]===v})[0]}
+
+function loadAvail(){
+  if(!sel.Fid||!sel.date){taken=[];return Promise.resolve()}
+  return api("availability?fid="+sel.Fid+"&date="+sel.date).then(function(r){taken=r});
+}
+function refresh(){
+  return Promise.all([loadAvail(),api("equipment").then(function(r){EQ=r}),api("bookings").then(function(r){BOOKS=r})]).then(draw);
+}
+function draw0(){
+  $("fac").innerHTML=FAC.map(function(f){
+    return '<button type="button" class="fac" data-fac="'+f.Fid+'" aria-pressed="'+(sel.Fid===f.Fid)+'"><span class="ic">'+(ICON[f.fsport.toLowerCase()]||"🏟️")+'</span><b>'+esc(f.fname)+'</b><small>'+esc(f.fsport)+'</small></button>';
+  }).join("");
+  $("days").innerHTML=(function(){var h="",d=new Date();for(var i=0;i<10;i++){var v=ymd(d);
+    h+='<button type="button" class="day" data-day="'+v+'" aria-pressed="'+(sel.date===v)+'"><small>'+(i?DAYS[d.getDay()]:"Today")+'</small><b>'+d.getDate()+'</b></button>';d.setDate(d.getDate()+1)}return h})();
+  if(!sel.Fid){$("slots").innerHTML='<span class="empty">Choose a facility to see times.</span>'}
+  else{
+    var g=[["Morning",function(t){return t.start<12}],["Afternoon",function(t){return t.start>=12&&t.start<17}],["Evening",function(t){return t.start>=17}]];
+    $("slots").innerHTML=g.map(function(x){var ts=SLOTS.filter(x[1]);if(!ts.length)return"";
+      return '<h3>'+x[0]+'</h3><div class="slots">'+ts.map(function(t){
+        return '<button type="button" class="slot" data-slot="'+t.tid+'" aria-pressed="'+(sel.tid===t.tid)+'"'+(taken.indexOf(t.tid)>-1||past(t)?" disabled":"")+'>'+t.label+'</button>'}).join("")+'</div>'}).join("");
+  }
+  $("coach").innerHTML=[{cid:null,name:"No coach"}].concat(COACH).map(function(c){
+    return '<button type="button" class="chip" data-coach="'+(c.cid===null?"":c.cid)+'" aria-pressed="'+(sel.cid===c.cid)+'">'+esc(c.name)+'</button>'}).join("");
+  var eq=EQ.filter(function(e){return e.Fid===sel.Fid});
+  $("equip").innerHTML=!sel.Fid?'<span class="empty">Choose a facility first.</span>':eq.map(function(e){
+    var q=sel.qty[e.Eid]||0;
+    return '<div class="eq"><span>'+esc(e.item)+' <span class="empty">('+e.quant+' in stock)</span></span><span class="step"><button type="button" aria-label="Fewer '+esc(e.item)+'" data-eq="'+e.Eid+'" data-d="-1"'+(q<1?" disabled":"")+'>−</button><span>'+q+'</span><button type="button" aria-label="More '+esc(e.item)+'" data-eq="'+e.Eid+'" data-d="1"'+(q>=e.quant?" disabled":"")+'>+</button></span></div>'}).join("");
+  var f=find(FAC,"Fid",sel.Fid),t=find(SLOTS,"tid",sel.tid),c=find(COACH,"cid",sel.cid);
+  var ex=eq.filter(function(e){return sel.qty[e.Eid]}).map(function(e){return sel.qty[e.Eid]+" × "+esc(e.item)}).join(", ");
+  $("sum").innerHTML=[["Facility",f?esc(f.fname)+" ("+esc(f.fsport)+")":"Not chosen"],["Date",sel.date||"Not chosen"],["Time",t?t.label:"Not chosen"],["Coach",c?esc(c.name):"None"],["Equipment",ex||"None"]]
+    .map(function(r){return '<div class="row"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>'}).join("");
+  $("list").innerHTML=BOOKS.length?'<table><thead><tr><th>ID</th><th>Name</th><th>Facility</th><th>Date</th><th>Time</th><th>Coach</th></tr></thead><tbody>'+BOOKS.map(function(b){
+    return "<tr><td>B"+b.bid+"</td><td>"+esc(b.username)+"</td><td>"+esc(b.facility)+"</td><td>"+b.booking_date+"</td><td>"+lbl(b.start)+" – "+lbl(b.end)+"</td><td>"+(b.coach?esc(b.coach):"None")+"</td></tr>"}).join("")+"</tbody></table>":'<p class="empty">No bookings yet.</p>';
+}
+
+document.addEventListener("click",function(e){
+  var b=e.target.closest("button");if(!b)return;var d=b.dataset;
+  if(d.fac){sel.Fid=+d.fac;sel.tid=null;sel.qty={};loadAvail().then(draw)}
+  else if(d.day){sel.date=d.day;sel.tid=null;loadAvail().then(draw)}
+  else if(d.slot){sel.tid=+d.slot;draw()}
+  else if(d.coach!==undefined&&b.classList.contains("chip")){sel.cid=d.coach===""?null:+d.coach;draw()}
+  else if(d.eq){var id=+d.eq,q=(sel.qty[id]||0)+ +d.d;if(q>0)sel.qty[id]=q;else delete sel.qty[id];draw()}
+});
+$("again").onclick=function(){$("done").style.display="none";$("form").style.display="block";sel.tid=null;sel.qty={};sel.cid=null;refresh()};
+
+$("go").onclick=function(){
+  var err=$("err");err.textContent="";
+  var name=$("uname").value.trim(),phone=$("uphone").value.trim();
+  if(!sel.Fid||!sel.date||!sel.tid){err.textContent="Choose a facility, day and time first.";return}
+  if(!name){err.textContent="Enter your name.";return}
+  if(!/^\d{10}$/.test(phone)){err.textContent="Enter a 10-digit phone number, digits only.";return}
+  var equipment=[];Object.keys(sel.qty).forEach(function(id){for(var i=0;i<sel.qty[id];i++)equipment.push(+id)});
+  $("go").disabled=true;
+  api("bookings",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({name:name,phone:phone,fid:sel.Fid,tid:sel.tid,date:sel.date,cid:sel.cid,equipment:equipment})})
+  .then(function(r){
+    try{localStorage.setItem("turf_user",JSON.stringify({name:name,phone:phone}))}catch(x){}
+    var f=find(FAC,"Fid",sel.Fid),t=find(SLOTS,"tid",sel.tid);
+    $("dsum").textContent=f.fname+" on "+sel.date+", "+t.label+". Show this ID at the turf.";
+    $("bid").textContent="B"+r.bid;$("form").style.display="none";$("done").style.display="block";return refresh()})
+  .catch(function(x){err.textContent=x.message;sel.tid=null;refresh()})
+  .then(function(){$("go").disabled=false});
+};
+
+function past(t){return sel.date===ymd(new Date())&&t.start<=new Date().getHours()}
+function draw(){
+  draw0();
+  var ok=[!!sel.Fid,!!sel.date,!!sel.tid];
+  ["s1","s2","s3"].forEach(function(id,i){$(id).classList.toggle("done-step",ok[i])});
+  var need=!ok[0]?"Choose a facility":!ok[1]?"Choose a day":!ok[2]?"Choose a time":"";
+  $("go").textContent=need||"Confirm booking";
+  var f=find(FAC,"Fid",sel.Fid),t=find(SLOTS,"tid",sel.tid);
+  $("barsum").textContent=need?need+" to continue":f.fname+" · "+t.label;
+  $("barbtn").textContent=need?"Next":"Details";
+}
+$("barbtn").onclick=function(){
+  var id=!sel.Fid?"s1":!sel.date?"s2":!sel.tid?"s3":"form";
+  $(id).scrollIntoView({behavior:"smooth",block:"start"});
+};
+try{var saved=JSON.parse(localStorage.getItem("turf_user")||"{}");$("uname").value=saved.name||"";$("uphone").value=saved.phone||""}catch(x){}
+sel.date=ymd(new Date());
+Promise.all([api("facilities"),api("timeslots"),api("coaches")]).then(function(r){
+  FAC=r[0];COACH=r[2];
+  SLOTS=r[1].map(function(t){return{tid:t.tid,start:t.start,label:lbl(t.start)+" – "+lbl(t.end)}});
+  return refresh();
+}).catch(function(){draw();$("err").innerHTML='Cannot reach the server. Check that it is running and the database is connected. <button class="retry" type="button" onclick="location.reload()">Retry</button>'});
+</script>
+</body>
+</html>
